@@ -1,0 +1,12 @@
+lanms==1.0.2
+lmdb==1.0.0
+natsort==7.0.1
+nltk==3.4.4
+opencv-contrib-python==4.2.0.34
+Pillow==7.2.0
+scikit-image==0.16.2
+scikit-learn==0.21.2
+scipy==1.5.2
+torch==1.5.0+cu101
+torchvision==0.6.0+cu101
+
