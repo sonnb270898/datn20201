@@ -6,11 +6,11 @@ import torch.utils.data
 import torch.nn.functional as F
 
 try:
-    from .recognition.utils import CTCLabelConverter, AttnLabelConverter
-    from .recognition.dataset import RawDataset, AlignCollate, Image2TextDataset
-    from .recognition.model import Model
-    from .opt import get_config
-    from .detection.imgproc import sorting_bounding_box
+    from recognition.utils import CTCLabelConverter, AttnLabelConverter
+    from recognition.dataset import RawDataset, AlignCollate, Image2TextDataset
+    from recognition.model import Model
+    from opt import get_config
+    from detection.imgproc import sorting_bounding_box
 except ImportError:
     from src.recognition.utils import CTCLabelConverter, AttnLabelConverter
     from src.recognition.dataset import RawDataset, AlignCollate, Image2TextDataset

@@ -1,10 +1,10 @@
 import time
 
 try :
-    from .text_detect import load_detector, extract_text_box, resize_img
-    from .text_recognize import load_recognizer, extract_text
-    from .detection.imgproc import *
-    from .opt import get_config
+    from text_detect import load_detector, extract_text_box, resize_img
+    from text_recognize import load_recognizer, extract_text
+    from detection.imgproc import *
+    from opt import get_config
 except ImportError:
     from src.text_detect import load_detector, extract_text_box, resize_img
     from src.text_recognize import load_recognizer, extract_text

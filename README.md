@@ -14,7 +14,7 @@
 
 Chỉnh sửa lại một số config trong opt.py
 
-`python handle_img.py`
+`python handle_img.py --sensitive`
 
 
 ***Author***

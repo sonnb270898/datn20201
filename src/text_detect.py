@@ -23,11 +23,11 @@ import zipfile
 from collections import OrderedDict
 
 try:
-    from .craft_utils import *
-    from .imgproc import *
-    from .file_utils import *
-    from .craft import CRAFT
-    from .opt import get_config
+    from detection.craft_utils import *
+    from detection.imgproc import *
+    from detection.file_utils import *
+    from detection.craft import CRAFT
+    from opt import get_config
 except ImportError:
     from src.detection.craft_utils import *
     from src.detection.imgproc import *
