@@ -5,6 +5,10 @@ import torch.backends.cudnn as cudnn
 import torch.utils.data
 import torch.nn.functional as F
 
+import pandas as pd
+import numpy as np
+import csv
+
 try:
     from recognition.utils import CTCLabelConverter, AttnLabelConverter
     from recognition.dataset import RawDataset, AlignCollate, Image2TextDataset
@@ -17,9 +21,10 @@ except ImportError:
     from src.recognition.model import Model
     from src.opt import get_config
     from src.detection.imgproc import sorting_bounding_box
-import time
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+###load_config
 args = get_config()
 
 def load_recognizer():
@@ -46,13 +51,14 @@ def load_recognizer():
     model.load_state_dict(torch.load(args.saved_model, map_location=device))
     return model, converter
 
-def extract_text(model,converter,image,poly):
-    num_rows = sorting_bounding_box(poly)
+def extract_text(model,converter,image,poly,image_path):
+
+    boxes_sorted_list, num_rows_dict = sorting_bounding_box(poly)
     text_results = []
     # prepare data
     AlignCollate_demo = AlignCollate(imgH=args.imgH, imgW=args.imgW, keep_ratio_with_pad=args.PAD)
     # demo_data = RawDataset(root=args.image_folder, opt=args)  # use RawDataset
-    demo_data = Image2TextDataset(image,poly,args)
+    demo_data = Image2TextDataset(image,boxes_sorted_list,args)
 
     demo_loader = torch.utils.data.DataLoader(
         demo_data, batch_size=args.batch_size,
@@ -106,9 +112,20 @@ def extract_text(model,converter,image,poly):
 
         res = ""
         tmp = 0
-        for i in num_rows:
-            res += (" ".join(text_results[tmp:tmp+i]) + "\n")
-            tmp += i
+        img2csv = []
+        for key, value in num_rows_dict.items():
+            for i in value:
+            #     res = res + (" ".join(text_results[tmp:tmp+i[0]])) + ' '
+            #
+            # res += '\n'
+                flatten_arr = np.array(i[1]).flatten()
+                point_2_string = list(map(str, flatten_arr))
+                img2csv.append([1,*point_2_string," ".join(text_results[tmp:tmp+i[0]])])
+                tmp += i[0]
+        #write to csv:
+        df = pd.DataFrame(img2csv)
+        df.to_csv('/home/son/Desktop/datn20201/resource/box/'+image_path.split('/')[-1][:-3]+'tsv', index=False, header=False,
+                  quotechar='',escapechar='\\',quoting=csv.QUOTE_NONE)
     return res
 
 # if __name__ == '__main__':

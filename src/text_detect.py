@@ -1,25 +1,11 @@
-"""
-Copyright (c) 2019-present NAVER Corp.
-MIT License
-"""
-
-# -*- coding: utf-8 -*-
 import sys
 import os
 import time
-import argparse
 
 import torch
-import torch.nn as nn
 import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 
-from PIL import Image
-import cv2
-from skimage import io
-import numpy as np
-import json
-import zipfile
 from collections import OrderedDict
 
 try:
@@ -155,18 +141,17 @@ def load_detector():
 if __name__ == '__main__':
     t = time.time()
     net, refine_net = load_detector()
-    for k, image_path in enumerate(image_list[:1]):
-        print("Test image {:d}/{:d}: {:s}".format(k+1, len(image_list), image_path), end='\r')
-        image = loadImage(image_path)
-        image = resize_img(image,640)
-        t_start = time.time()
-        bboxes, polys, score_text = extract_text_box(net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly, refine_net)
-        print('time inference: {:0.3f}s  '.format(time.time()-t_start))
-        print('image size: ', image.shape)
-        # save score text
-        filename, file_ext = os.path.splitext(os.path.basename(image_path))
-        mask_file = result_folder + "/res_" + filename + '_mask.jpg'
-        # cv2.imwrite(mask_file, score_text)
-        saveResult(image_path, image, polys, dirname=result_folder)
+    image_path = "/home/son/Desktop/datn20201/resource/img/receipt_1017.jpg"
+    image = loadImage(image_path)
+    # image = resize_img(image,640)
+    image = cv2.resize(image,(480,960))
+    t_start = time.time()
+    bboxes, polys, score_text = extract_text_box(net, image, args.text_threshold, args.link_threshold, args.low_text, args.cuda, args.poly, refine_net)
+    print('time inference: {:0.3f}s  '.format(time.time()-t_start))
+    print('image size: ', image.shape)
+    # save score text
+    filename, file_ext = os.path.splitext(os.path.basename(image_path))
+    mask_file = result_folder + "/res_" + filename + '_mask.jpg'
+    # cv2.imwrite(mask_file, score_text)
+    saveResult(image_path, image, polys, dirname=result_folder)
 
-    print("elapsed time : {}s".format(time.time() - t))

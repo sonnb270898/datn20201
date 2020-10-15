@@ -4,11 +4,10 @@ import numpy as np
 import cv2
 
 try:
-    from .imgproc import *
+    from .imgproc import sorting_bounding_box
 except ImportError:
-    from src.detection.imgproc import *
+    from src.detection.imgproc import sorting_bounding_box
 
-# borrowed from https://github.com/lengstrom/fast-style-transfer/blob/master/src/utils.py
 def get_files(img_dir):
     imgs, masks, xmls = list_files(img_dir)
     return imgs, masks, xmls
@@ -57,30 +56,31 @@ def saveResult(img_file, img, boxes_list, dirname='./result/', verticals=None, t
             os.mkdir(dirname)
 
         # with open(res_file, 'w') as f:
-        # boxes_list = sorting_bounding_box(poly)
+        boxes_sorted_list, num_rows_dict = sorting_bounding_box(boxes_list)
         idx = 0
-        # for boxes in boxes_list:
-        for  box in boxes_list:
-            poly = np.array(box).astype(np.int32).reshape((-1))
-            # strResult = ','.join([str(p) for p in poly]) + '\r\n'
-            # f.write(strResult)
-            poly = poly.reshape(-1, 2)
-            # res_img_file_word = dirname + "res_" + str(idx) + "_" + filename + '.jpg'
-            # cv2.imwrite(res_img_file_word, img[poly[0][1]:poly[3][1], poly[0][0]:poly[1][0]])
-            cv2.polylines(img, [poly.reshape((-1, 1, 2))], True, color=(0, 0, 255), thickness=2)
-            ptColor = (0, 255, 255)
-            if verticals is not None:
-                if verticals[idx]:
-                    ptColor = (255, 0, 0)
+        # for box in boxes_sorted_list:
+        for key,value in num_rows_dict.items():
+            for idx, box in value:
+                poly = np.array(box).astype(np.int32).reshape((-1))
+                # strResult = ','.join([str(p) for p in poly]) + '\r\n'
+                # f.write(strResult)
+                poly = poly.reshape(-1, 2)
+                # res_img_file_word = dirname + "res_" + str(idx) + "_" + filename + '.jpg'
+                # cv2.imwrite(res_img_file_word, img[poly[0][1]:poly[3][1], poly[0][0]:poly[1][0]])
+                cv2.polylines(img, [poly.reshape((-1, 1, 2))], True, color=(0, 0, 255), thickness=2)
+                ptColor = (0, 255, 255)
+                if verticals is not None:
+                    if verticals[idx]:
+                        ptColor = (255, 0, 0)
 
-            if texts is not None:
-                font = cv2.FONT_HERSHEY_SIMPLEX
-                font_scale = 0.5
-                cv2.putText(img, "{}".format(texts[idx]), (poly[0][0]+1, poly[0][1]+1), font, font_scale, (0, 0, 0), thickness=1)
-                cv2.putText(img, "{}".format(texts[idx]), tuple(poly[0]), font, font_scale, (0, 255, 255), thickness=1)
-            idx += 1
+                if texts is not None:
+                    font = cv2.FONT_HERSHEY_SIMPLEX
+                    font_scale = 0.5
+                    cv2.putText(img, "{}".format(texts[idx]), (poly[0][0]+1, poly[0][1]+1), font, font_scale, (0, 0, 0), thickness=1)
+                    cv2.putText(img, "{}".format(texts[idx]), tuple(poly[0]), font, font_scale, (0, 255, 255), thickness=1)
+                idx += 1
         # Save result image
-        # cv2.imwrite(res_img_file, img)
         cv2.imshow('aaa',img)
         cv2.waitKey(0)
+        cv2.imwrite(res_img_file, img)
 
