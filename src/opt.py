@@ -4,12 +4,12 @@ def str2bool(v):
     return v.lower() in ("yes", "y", "true", "t", "1")
 
 def get_config():
-    parser = argparse.ArgumentParser(description='Config Text Detection & Recognition')
+    parser = argparse.ArgumentParser(description='Config Text Detection, Recognition & Identification')
     """=======================Recognition======================="""
     parser.add_argument('--image_folder', default='/home/son/Desktop/text-recognition/resource', help='path to image_folder which contains text images')
     parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
-    parser.add_argument('--saved_model', default='./weights/TPS-ResNet-BiLSTM-Attn-case-sensitive.pth', help="path to saved_model to evaluation")
+    parser.add_argument('--saved_model', default='/home/son/Desktop/datn20201/src/weights/TPS-ResNet-BiLSTM-Attn-case-sensitive.pth', help="path to saved_model to evaluation")
     """ Data processing """
     parser.add_argument('--batch_max_length', type=int, default=25, help='maximum-label-length')
     parser.add_argument('--imgH', type=int, default=32, help='the height of the input image')
@@ -30,7 +30,7 @@ def get_config():
     parser.add_argument('--hidden_size', type=int, default=256, help='the size of the LSTM hidden state')
 
     """=======================Detection======================="""
-    parser.add_argument('--trained_model', default='./weights/craft_mlt_25k.pth', type=str, help='pretrained model')
+    parser.add_argument('--trained_model', default='/home/son/Desktop/datn20201/src/weights/craft_mlt_25k.pth', type=str, help='pretrained model')
     parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
     parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
     parser.add_argument('--link_threshold', default=0.4, type=float, help='link confidence threshold')
@@ -42,6 +42,14 @@ def get_config():
     parser.add_argument('--test_folder', default='/home/son/Desktop/text-detection/bill', type=str, help='folder path to input images')
     parser.add_argument('--refine', default=False, action='store_true', help='enable link refiner')
     parser.add_argument('--refiner_model', default='./weights/craft_refiner_CTW1500.pth', type=str, help='pretrained refiner model')
+
+    """=======================Identification======================="""
+
+    parser.add_argument('-ckpt', '--checkpoint', default="/home/son/Downloads/CORD/cs_6lb.pth", type=str,
+                      help='path to load checkpoint (default: None)')
+    parser.add_argument('-output', '--output_folder', default='/home/son/Desktop/datn20201/res',
+                      type=str,
+                      help='output folder (default: predict_results)')
 
     args = parser.parse_args()
 

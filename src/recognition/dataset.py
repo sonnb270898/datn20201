@@ -272,7 +272,6 @@ class Image2TextDataset(Dataset):
 
     def __getitem__(self, idx):
         x1,x2,y1,y2 = self._4point2xyxy(self.bboxes[idx])
-        print(x1,x2,y1,y2)
         img = Image.fromarray(self.img[y1:y2,x1:x2])
         if not self.opt.rgb:
             img = img.convert('L')

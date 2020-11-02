@@ -91,11 +91,9 @@ def extract_text(model,converter,image,poly,image_path):
                 _, preds_index = preds.max(2)
                 preds_str = converter.decode(preds_index, length_for_pred)
 
-            log = open(f'./log_demo_result.txt', 'a')
             dashed_line = '-' * 80
-            head = f'{"image_path":25s}\t{"predicted_labels":25s}\tconfidence score'            
+            head = f'{"image_path":25s}\t{"predicted_labels":25s}\tconfidence score'
             print(f'{dashed_line}\n{head}\n{dashed_line}')
-            log.write(f'{dashed_line}\n{head}\n{dashed_line}\n')
             preds_prob = F.softmax(preds, dim=2)
             preds_max_prob, _ = preds_prob.max(dim=2)
             for pred, pred_max_prob in zip(preds_str, preds_max_prob):
@@ -107,8 +105,6 @@ def extract_text(model,converter,image,poly,image_path):
                 # calculate confidence score (= multiply of pred_max_prob)
                 confidence_score = pred_max_prob.cumprod(dim=0)[-1]
                 print(f'{pred:25s}\t{confidence_score:0.4f}')
-                log.write(f'{pred:25s}\t{confidence_score:0.4f}\n')
-            log.close()
 
         res = ""
         tmp = 0
@@ -119,14 +115,14 @@ def extract_text(model,converter,image,poly,image_path):
             #
             # res += '\n'
                 flatten_arr = np.array(i[1]).flatten()
-                point_2_string = list(map(str, flatten_arr))
-                img2csv.append([1,*point_2_string," ".join(text_results[tmp:tmp+i[0]])])
+                # point_2_string = list(map(str, flatten_arr))
+                img2csv.append([1,flatten_arr," ".join(text_results[tmp:tmp+i[0]]).replace(',','\,'),'other'])
                 tmp += i[0]
         #write to csv:
-        df = pd.DataFrame(img2csv)
-        df.to_csv('/home/son/Desktop/datn20201/resource/box/'+image_path.split('/')[-1][:-3]+'tsv', index=False, header=False,
-                  quotechar='',escapechar='\\',quoting=csv.QUOTE_NONE)
-    return res
+        # df = pd.DataFrame(img2csv)
+        # df.to_csv('/home/son/Desktop/datn20201/resource/box/'+image_path.split('/')[-1][:-3]+'tsv', index=False, header=False,
+        #           quotechar='',escapechar='\\',quoting=csv.QUOTE_NONE)
+    return img2csv
 
 # if __name__ == '__main__':
 #       # same with ASTER setting (use 94 char).

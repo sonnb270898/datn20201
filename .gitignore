@@ -1,6 +1,7 @@
 weights/
-__pycache__
+__pycache__/
 resource/
 log_demo_result.txt
 res/
-
+.idea/
+.vscode/
