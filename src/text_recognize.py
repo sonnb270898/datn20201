@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import csv
 
+import re
 try:
     from recognition.utils import CTCLabelConverter, AttnLabelConverter
     from recognition.dataset import RawDataset, AlignCollate, Image2TextDataset
@@ -92,8 +93,8 @@ def extract_text(model,converter,image,poly,image_path):
                 preds_str = converter.decode(preds_index, length_for_pred)
 
             dashed_line = '-' * 80
-            head = f'{"image_path":25s}\t{"predicted_labels":25s}\tconfidence score'
-            print(f'{dashed_line}\n{head}\n{dashed_line}')
+            # head = f'{"image_path":25s}\t{"predicted_labels":25s}\tconfidence score'
+            # print(f'{dashed_line}\n{head}\n{dashed_line}')
             preds_prob = F.softmax(preds, dim=2)
             preds_max_prob, _ = preds_prob.max(dim=2)
             for pred, pred_max_prob in zip(preds_str, preds_max_prob):
@@ -104,7 +105,7 @@ def extract_text(model,converter,image,poly,image_path):
                 text_results.append(pred)
                 # calculate confidence score (= multiply of pred_max_prob)
                 confidence_score = pred_max_prob.cumprod(dim=0)[-1]
-                print(f'{pred:25s}\t{confidence_score:0.4f}')
+                # print(f'{pred:25s}\t{confidence_score:0.4f}')
 
         res = ""
         tmp = 0
@@ -116,7 +117,9 @@ def extract_text(model,converter,image,poly,image_path):
             # res += '\n'
                 flatten_arr = np.array(i[1]).flatten()
                 # point_2_string = list(map(str, flatten_arr))
-                img2csv.append([1,flatten_arr," ".join(text_results[tmp:tmp+i[0]]).replace(',','\,'),'other'])
+                text_box = re.sub(r"[\"\']",''," ".join(text_results[tmp:tmp+i[0]]).replace(',','\,'))
+                img2csv.append([1, flatten_arr, text_box, 'other'])
+                # img2csv.append([1,*(flatten_arr.tolist())," ".join(text_results[tmp:tmp+i[0]])])
                 tmp += i[0]
         #write to csv:
         # df = pd.DataFrame(img2csv)

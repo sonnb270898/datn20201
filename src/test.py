@@ -20,5 +20,7 @@ def read_ocr_file_without_box_entity_type(filepath: str):
 # a=read_ocr_
 import os
 import glob
-folder_path="/home/son/Desktop/datn20201/resource/img"
-print(glob.glob(folder_path+'/*'))
+
+_product_pattern = r"([A-za-z]{3,})+"
+result = re.search(_product_pattern, "Koobidehxx7", re.IGNORECASE)
+print(result)

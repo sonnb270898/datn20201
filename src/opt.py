@@ -47,7 +47,7 @@ def get_config():
 
     parser.add_argument('-ckpt', '--checkpoint', default="/home/son/Downloads/CORD/cs_6lb.pth", type=str,
                       help='path to load checkpoint (default: None)')
-    parser.add_argument('-output', '--output_folder', default='/home/son/Desktop/datn20201/res',
+    parser.add_argument('-output', '--output_folder', default='/home/son/Desktop/datn20201/res_after_2',
                       type=str,
                       help='output folder (default: predict_results)')
 
