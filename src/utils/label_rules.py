@@ -59,11 +59,11 @@ def is_price(boxes, index):
         if product_nb != -1 and price_nb != -1:
             if (abs(boxes[index][1][2] -  boxes[price_nb][1][2]) <= min_distance_price_price_x) and \
                 (abs(boxes[index][1][0] -  boxes[product_nb][1][0]) >= min_distance_product_price_x) and\
-                (abs(boxes[index][1][1] -  boxes[product_nb][1][1]) <= abs(boxes[index][1][1] -  boxes[index][1][-1])+15):
+                (abs(boxes[index][1][1] -  boxes[product_nb][1][1]) <= abs(boxes[product_nb][1][1] -  boxes[product_nb][1][-1])+15):
                 return True
         elif product_nb != -1 and price_nb == -1:
             if (abs(boxes[index][1][0] -  boxes[product_nb][1][0]) >= min_distance_product_price_x) and\
-                (abs(boxes[index][1][1] -  boxes[product_nb][1][1]) <= abs(boxes[index][1][1] -  boxes[index][1][-1])+15):
+                (abs(boxes[index][1][1] -  boxes[product_nb][1][1]) <= abs(boxes[product_nb][1][1] -  boxes[product_nb][1][-1])+15):
                 return True
         elif  product_nb == -1:
             return False   
@@ -78,11 +78,11 @@ def is_product(boxes, index):
         if product_nb != -1 and price_nb != -1:
             if (abs(boxes[index][1][0] -  boxes[product_nb][1][0]) <= min_distance_price_price_x) and \
                 (abs(boxes[index][1][0] -  boxes[price_nb][1][0]) >= min_distance_product_price_x) and \
-                (abs(boxes[index][1][1] -  boxes[price_nb][1][1]) <= abs(boxes[index][1][1] -  boxes[index][1][-1])+15):
+                (abs(boxes[index][1][1] -  boxes[price_nb][1][1]) <= abs(boxes[price_nb][1][1] -  boxes[price_nb][1][-1])+15):
                 return True
         elif product_nb == -1 and price_nb != -1:
             if  (abs(boxes[index][1][0] -  boxes[price_nb][1][0]) >= min_distance_product_price_x) and \
-                (abs(boxes[index][1][1] -  boxes[price_nb][1][1]) <= abs(boxes[index][1][1] -  boxes[index][1][-1])+15):
+                (abs(boxes[index][1][1] -  boxes[price_nb][1][1]) <= abs(boxes[price_nb][1][1] -  boxes[price_nb][1][-1])+15):
                 return True
         elif price_nb == -1:
             return False
@@ -97,7 +97,7 @@ def is_total(boxes, index):
 
     if not result and boxes[index][3] == 'total':
         # boxes[index][3] = 'subtotal'
-        return boxes, True
+        return 'total', True
 
     if result and (boxes[index][1][0] > W/3) and (boxes[index][1][1]) > H/4:
         price_nb = find_neighbor_label(boxes,index,'price')
@@ -107,19 +107,21 @@ def is_total(boxes, index):
             if (abs(boxes[index][1][2] -  boxes[price_nb][1][2]) <= min_distance_total_price_x) and \
                 (abs(boxes[index][1][0] -  boxes[total_nb][1][0]) >= min_distance_total_total_x) and \
                 (abs(boxes[index][1][1] -  boxes[total_nb][1][1]) <= abs(boxes[index][1][1] -  boxes[index][1][-1])/2):
-                return boxes, True
+                return 'total', True
         elif total_nb == -1 and index > 1:
             if any([True if t_nym in boxes[index][2].lower() else False for t_nym in total_synonym]):
-                return boxes, True
+                return 'subtotal', True
             elif any([True if t_nym in boxes[index-1][2].lower() else False for t_nym in total_synonym]):
-                if boxes[index-1][1][0] < W/2 and abs(boxes[index-1][1][0] - boxes[index][1][0]) >= min_distance_total_total_x:
+                if (boxes[index-1][1][0] < W/2 and abs(boxes[index-1][1][0] - boxes[index][1][0]) >= min_distance_total_total_x) \
+                    or (boxes[index-1][3] == 'total'):
                     boxes[index-1][3] = 'subtotal'
-                    return boxes, True
+                    return 'subtotal', True
             elif any([True if t_nym in boxes[index-2][2].lower() else False for t_nym in total_synonym]):
-                if boxes[index-2][1][0] < W/2 and abs(boxes[index-1][1][0] - boxes[index][1][0]) >= min_distance_total_total_x:
+                if (boxes[index-2][1][0] < W/2 and abs(boxes[index-2][1][0] - boxes[index][1][0]) >= min_distance_total_total_x) \
+                    or (boxes[index-1][3] == 'total') :
                     boxes[index-2][3] = 'subtotal'
-                    return boxes, True
-    return boxes, False
+                    return 'subtotal', True
+    return 'other', False
 
 def get_final_total(boxes):
     idx = ((boxes[:,3]=="subtotal") | (boxes[:,3]=="total")).nonzero()[0]
@@ -135,7 +137,8 @@ def get_final_total(boxes):
         boxes[id_max][3] = 'total'
         while current_i > -1:
             pre_box = boxes[idx[current_i]][1]
-            if pre_box[0] < W/2 and abs(pre_box[1] - boxes[id_max][1][1]) <= 20:
+            # get label_box total in same line
+            if abs(pre_box[1] - boxes[id_max][1][1]) <= 20:
                 boxes[idx[current_i]][3] = 'total'
             current_i -= 1
     return boxes 

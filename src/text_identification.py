@@ -105,58 +105,25 @@ def extract_information(image, boxes_and_transcripts_data, pick_model, save_imag
                 
     i = 0
     while i <= 2 :
-        for idx, box in enumerate(boxes_and_transcripts_data):  
-                if box[3] in ['product','price','other','total']:
-                    boxes_and_transcripts_data, is_total_bool = is_total(boxes_and_transcripts_data, idx)
-                    if is_price(boxes_and_transcripts_data, idx):
-                        box[3] = 'price'
-                    elif is_product(boxes_and_transcripts_data, idx):
-                        box[3] = 'product'
-                    elif is_total_bool:
-                        box[3] = 'subtotal'
-                    else:
-                        box[3] = 'other'
-                elif box[3] in ['total','subtotal']:
-                    continue
+        for idx, box in enumerate(boxes_and_transcripts_data): 
+            if box[3] in ['product','price','other','total']:
+                label, is_total_bool = is_total(boxes_and_transcripts_data, idx)
+                if is_product(boxes_and_transcripts_data, idx):
+                    box[3] = 'product'
+                elif is_price(boxes_and_transcripts_data, idx):
+                    box[3] = 'price'
+                elif is_total_bool:
+                    box[3] = label
                 else:
                     box[3] = 'other'
+            elif box[3] in ['total','subtotal']:
+                continue
+            else:
+                box[3] = 'other'
         i += 1
 
-
-
-        #     if i == 0:
-        #         if box[3] == "other":
-        #             boxes_and_transcripts_data, is_total_bool = is_total(boxes_and_transcripts_data, idx)
-        #             if is_price(boxes_and_transcripts_data, idx):
-        #                 box[3] = 'price'
-        #             elif is_product(boxes_and_transcripts_data, idx):
-        #                 box[3] = 'product'
-        #             elif is_total_bool:
-        #                 box[3] = 'total'
-        #             else:
-        #                 box[3] = 'other'
-        #         else:
-        #             continue
-        #     else:    
-        #         if box[3] in ['product','price','other','total']:
-        #             boxes_and_transcripts_data, is_total_bool = is_total(boxes_and_transcripts_data, idx)
-        #             if is_price(boxes_and_transcripts_data, idx):
-        #                 box[3] = 'price'
-        #             elif is_product(boxes_and_transcripts_data, idx):
-        #                 box[3] = 'product'
-        #             elif is_total_bool:
-        #                 box[3] = 'total'
-        #             else:
-        #                 box[3] = 'other'
-        #         elif box[3] in ['total','subtotal']:
-        #             continue
-        #         else:
-        #             box[3] = 'other'
-        # i += 1
-
     boxes_and_transcripts_data = np.asarray(boxes_and_transcripts_data)
-    #  | (boxes_and_transcripts_data[:,3]=="total")
-    if(len(boxes_and_transcripts_data[(boxes_and_transcripts_data[:,3]=="subtotal")])>=2):
+    if(len(boxes_and_transcripts_data[(boxes_and_transcripts_data[:,3]=="subtotal") | (boxes_and_transcripts_data[:,3]=="total")]) > 0):
         boxes_and_transcripts_data = get_final_total(boxes_and_transcripts_data)
     
     y_pred = []
@@ -168,8 +135,3 @@ def extract_information(image, boxes_and_transcripts_data, pick_model, save_imag
     cv2.imwrite(os.path.join(args.output_folder,save_image),image)
     return y_pred
 
-if __name__ == '__main__':
-    identifier = load_identifier()
-    image = cv2.imread("/home/son/Desktop/datn20201/resource/img/1125-receipt.jpg")
-    image = cv2.resize(image, (480, 960))
-    extract_information(image,boxes,identifier)
