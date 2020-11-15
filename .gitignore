@@ -6,3 +6,4 @@ res/
 .idea/
 .vscode/
 test.py
+.env
