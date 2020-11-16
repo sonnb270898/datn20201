@@ -65,7 +65,6 @@ def callback():
     if userinfo_response.json().get("email_verified"):
         uid = userinfo_response.json()["sub"]
         email = userinfo_response.json()["email"]
-        # picture = userinfo_response.json()["picture"]
         name = userinfo_response.json()["name"]
 
     else:
@@ -75,8 +74,8 @@ def callback():
 
     if not User.get_user(uid):
         User.create_user(uid, email, name)
-    login_user(user)
-    return {"message":"login successful"}, 200
+    login_user(user, remember=True)
+    return redirect(url_for('budgets.get_all_budgets'))
 
 @login_route.route("/logout", methods=['GET'])
 @login_required

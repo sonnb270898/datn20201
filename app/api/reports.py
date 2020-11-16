@@ -1,4 +1,4 @@
-from flask import request, redirect, url_for, Blueprint
+from flask import request, redirect, url_for, Blueprint, g
 from db_connection import mysql
 import datetime
 
@@ -15,7 +15,7 @@ def report_by_week_of_month():
         current_year = now.strftime('%Y')
         month = request.args.get('month',current_month)
         year = request.args.get('year',current_year)
-        cursor.execute("select * from receipt where date >= '{}' and user_id='{}'".format('-'.join([year, month, '01']), user))
+        cursor.execute("select * from receipt where date >= '{}' and user_id='{}'".format('-'.join([year, month, '01']), g.user_id))
         res = cursor.fetchall()
         if res:
             result = [{"name" : "week"+str(i), "among":0 } for i in range(1,5)]
@@ -47,7 +47,7 @@ def report_by_category():
                             from receipt, product 
                             where date >= '{}' and user_id='{}'
                             and receipt.id = product.receipt_id
-                            group by category """.format('-'.join([year, month, '01']), user))
+                            group by category """.format('-'.join([year, month, '01']), g.user_id))
         res = cursor.fetchall()
         if res:
             result = list(map(lambda x:{

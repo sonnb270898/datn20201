@@ -1,15 +1,14 @@
-from flask import request, redirect, url_for, Blueprint
+from flask import request, redirect, url_for, Blueprint, g
 from db_connection import mysql
 import datetime
 
 budgets = Blueprint("budgets", __name__, url_prefix='/budgets')
-user_id = 1
 
 @budgets.route('/', methods=['GET'])
 def get_all_budgets():
     try:
         cursor = mysql.get_db().cursor()
-        cursor.execute("select * from budget where user_id='{}'".format(user_id))
+        cursor.execute("select * from budget where user_id='{}'".format(g.user_id))
         budgets_list = cursor.fetchall()
         if budgets_list:
             result = list(map(lambda x: {
@@ -31,7 +30,7 @@ def get_budget(id):
         budget = cursor.fetchone()
         if budget:
             fromDate, toDate = budget[2].strftime("%Y-%m-%d"), budget[3].strftime("%Y-%m-%d")
-            cursor.execute("select * from receipt where user_id='{}' and date >= '{}' and date <= '{}'".format(user_id, fromDate, toDate))
+            cursor.execute("select * from receipt where user_id='{}' and date >= '{}' and date <= '{}'".format(g.user_id, fromDate, toDate))
             receipt = cursor.fetchall()
             if receipt:
                 result = list(map(lambda x: {

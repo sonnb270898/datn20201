@@ -1,10 +1,8 @@
-from flask import request, redirect, url_for, Blueprint
+from flask import request, redirect, url_for, Blueprint, g
 from db_connection import mysql
 import datetime
 
 receipts = Blueprint("receipts", __name__, url_prefix='/receipts')
-user = 1
-
 
 @receipts.route('/', methods=['GET'])
 def get_all_receipts():
@@ -14,7 +12,7 @@ def get_all_receipts():
                 cursor.execute("select * from receipt")
         else:
             date = [request.args.get('year','2020'), request.args.get('month','01'), request.args.get('day','01')]
-            cursor.execute("select * from receipt where date > '{}' and user_id='{}' ".format('-'.join(date), user))
+            cursor.execute("select * from receipt where date > '{}' and user_id='{}' ".format('-'.join(date), g.user_id))
         receipts_list = cursor.fetchall()
         if receipts_list:
             result = list(map(lambda x: {
@@ -52,7 +50,7 @@ def create_receipt():
         cursor.execute("insert into \
                 receipt (date,total,merchant,user_id) \
                 values (%s,%s,%s,%s)",
-                (date, total, merchant, user))
+                (date, total, merchant, g.user_id))
         mysql.get_db().commit()
         result = {
             "date": date,
