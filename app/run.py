@@ -1,10 +1,8 @@
 from flask import Flask
 import logging as logger
+from app import app
 
-logger.basicConfig(level="DEBUG")
-
-app = Flask(__name__)
 
 if __name__ == '__main__':
     from api import *
-    app.run(debug=True, ssl_context="adhoc")
+    app.run(debug=False, ssl_context="adhoc")

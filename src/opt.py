@@ -7,7 +7,7 @@ def get_config():
     parser = argparse.ArgumentParser(description='Config Text Detection, Recognition & Identification')
     """=======================Recognition======================="""
     parser.add_argument('--image_folder', default='/home/son/Desktop/text-recognition/resource', help='path to image_folder which contains text images')
-    parser.add_argument('--workers', type=int, help='number of data loading workers', default=4)
+    parser.add_argument('--workers', type=int, help='number of data loading workers', default=0)
     parser.add_argument('--batch_size', type=int, default=192, help='input batch size')
     parser.add_argument('--saved_model', default='/home/son/Desktop/datn20201/src/weights/TPS-ResNet-BiLSTM-Attn-case-sensitive.pth', help="path to saved_model to evaluation")
     """ Data processing """
@@ -16,7 +16,7 @@ def get_config():
     parser.add_argument('--imgW', type=int, default=100, help='the width of the input image')
     parser.add_argument('--rgb', action='store_true', help='use rgb input')
     parser.add_argument('--character', type=str, default='0123456789abcdefghijklmnopqrstuvwxyz', help='character label')
-    parser.add_argument('--sensitive', action='store_true', help='for sensitive character mode')
+    parser.add_argument('--sensitive', default=True, action='store_true', help='for sensitive character mode')
     parser.add_argument('--PAD', action='store_true', help='whether to keep ratio then pad for image resize')
     """ Model Architecture """
     parser.add_argument('--Transformation', type=str, default='TPS', help='Transformation stage. None|TPS')
@@ -31,10 +31,10 @@ def get_config():
 
     """=======================Detection======================="""
     parser.add_argument('--trained_model', default='/home/son/Desktop/datn20201/src/weights/craft_mlt_25k.pth', type=str, help='pretrained model')
-    parser.add_argument('--text_threshold', default=0.7, type=float, help='text confidence threshold')
-    parser.add_argument('--low_text', default=0.4, type=float, help='text low-bound score')
-    parser.add_argument('--link_threshold', default=0.4, type=float, help='link confidence threshold')
-    parser.add_argument('--cuda', default=False, type=str2bool, help='Use cuda for inference')
+    parser.add_argument('--text_threshold', default=0.6, type=float, help='text confidence threshold')
+    parser.add_argument('--low_text', default=0.3, type=float, help='text low-bound score')
+    parser.add_argument('--link_threshold', default=0.3, type=float, help='link confidence threshold')
+    parser.add_argument('--cuda', default=True, type=str2bool, help='Use cuda for inference')
     parser.add_argument('--canvas_size', default=1280, type=int, help='image size for inference')
     parser.add_argument('--mag_ratio', default=1, type=float, help='image magnification ratio')
     parser.add_argument('--poly', default=False, action='store_true', help='enable polygon type')
@@ -50,6 +50,7 @@ def get_config():
     parser.add_argument('-output', '--output_folder', default='/home/son/Desktop/datn20201/res_after_2',
                       type=str,
                       help='output folder (default: predict_results)')
+    parser.add_argument('--test_mode', action='store_true', help='for test mode')
 
     args = parser.parse_args()
 

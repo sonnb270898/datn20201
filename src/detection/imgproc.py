@@ -10,7 +10,10 @@ import cv2
 from collections import defaultdict
 
 def loadImage(img_file):
-    img = cv2.imread(img_file,cv2.COLOR_BGR2RGB)           # RGB order
+    if isinstance(img_file,str):
+        img = cv2.imread(img_file,cv2.COLOR_BGR2RGB)
+    else:
+       img = img_file         # RGB order
     if img.shape[0] == 2:
         img = img[0]
     if len(img.shape) == 2 :
@@ -78,7 +81,7 @@ def get_4_points(arr):
     x2, y2 = np.max(arr, 0)
     return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
 
-min_dis = 20
+min_dis = 15
 def get_merge_boxes(points):
     # final_points = []
     num_rows_dict = defaultdict(list)
@@ -107,7 +110,7 @@ def sorting_bounding_box(points):
     while len(point_sum) != 0:
         tmp_arr = [arr for arr in sorted(point_sum, key=lambda x: x[1])]
         init_box = tmp_arr[0]
-        thresh_value = abs(init_box[0][0][1] - init_box[0][3][1]) / 2
+        thresh_value = abs(init_box[0][0][1] - init_box[0][3][1]) / 2 + 5
         tmp_arr.remove(init_box)
         point_sum.remove(init_box)
         filter_arr = [i for i in tmp_arr if (abs(i[0][0][1] - init_box[0][0][1]) <= thresh_value)]

@@ -24,14 +24,9 @@ except ImportError:
     from src.opt import get_config
     from src.utils.label_rules import is_price, is_product, is_total, get_final_total
 
-import re
 import cv2
 import os
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt     
-from sklearn.metrics import confusion_matrix,accuracy_score
-import pylab as pl
 
 args = get_config()
 device = torch.device("cuda:0" if torch.cuda.is_available() else 'cpu')
@@ -51,7 +46,7 @@ def load_identifier():
     pick_model.eval()
     return pick_model
 
-def extract_information(image, boxes_and_transcripts_data, pick_model, save_image):
+def extract_information(image, boxes_and_transcripts_data, pick_model, save_image=''):
     # setup dataset and data_loader instances
     test_dataset = TestingDataset(image=image,
                                   boxes_and_transcripts_data=boxes_and_transcripts_data,
@@ -92,46 +87,50 @@ def extract_information(image, boxes_and_transcripts_data, pick_model, save_imag
                 spans = bio_tags_to_spans(decoded_tags, [])
                 spans = sorted(spans, key=lambda x: x[1][0])
                 bbox = input_data_item['boxes_coordinate'][idx].cpu().numpy().astype(np.int32)
-                entities = []  # exists one to many case
                 for entity_name, range_tuple in spans:
                     for b_num, w in enumerate(word_list):
                         if range_tuple[0] in range(*w[0]):
-                            entity = dict(entity_name=entity_name,
-                            text=w[1],
-                            box=b_num
-                            )
-                            entities.append(entity)
                             boxes_and_transcripts_data[b_num][3] = entity_name
                 
     i = 0
     while i <= 2 :
-        for idx, box in enumerate(boxes_and_transcripts_data): 
-            if box[3] in ['product','price','other','total']:
+        for idx, box in enumerate(boxes_and_transcripts_data):
+            if i == 0 and box[3] == 'other': 
                 label, is_total_bool = is_total(boxes_and_transcripts_data, idx)
-                if is_product(boxes_and_transcripts_data, idx):
+                if is_total_bool:
+                    box[3] = label
+                elif is_product(boxes_and_transcripts_data, idx):
                     box[3] = 'product'
                 elif is_price(boxes_and_transcripts_data, idx):
                     box[3] = 'price'
-                elif is_total_bool:
-                    box[3] = label
                 else:
                     box[3] = 'other'
-            elif box[3] in ['total','subtotal']:
-                continue
-            else:
-                box[3] = 'other'
+            elif i>0 and box[3] in ['product','price','other','total']:
+                label, is_total_bool = is_total(boxes_and_transcripts_data, idx)
+                if is_total_bool:
+                    box[3] = label
+                elif is_product(boxes_and_transcripts_data, idx):
+                    box[3] = 'product'
+                elif is_price(boxes_and_transcripts_data, idx):
+                    box[3] = 'price'
+                else:
+                    box[3] = 'other'
         i += 1
 
     boxes_and_transcripts_data = np.asarray(boxes_and_transcripts_data)
-    if(len(boxes_and_transcripts_data[(boxes_and_transcripts_data[:,3]=="subtotal") | (boxes_and_transcripts_data[:,3]=="total")]) > 0):
+    # if(len(boxes_and_transcripts_data[(boxes_and_transcripts_data[:,3]=="subtotal") | (boxes_and_transcripts_data[:,3]=="total")]) > 0):
+    if(len(boxes_and_transcripts_data[boxes_and_transcripts_data[:,3]=="subtotal"]) > 0) or \
+        (len(boxes_and_transcripts_data[boxes_and_transcripts_data[:,3]=="total"]) > 2):
         boxes_and_transcripts_data = get_final_total(boxes_and_transcripts_data)
     
     y_pred = []
     for idx, box in enumerate(boxes_and_transcripts_data):
-        if box[3] in ['product','price','total']:
+        if box[3] in ['product','price','total','company','address','date']:
             cv2.polylines(image, [box[1].reshape((-1, 1, 2))], True, color=(0, 0, 255), thickness=2)
             cv2.putText(image, box[3], (box[1][4],box[1][5]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
         y_pred.append(box[3])
     cv2.imwrite(os.path.join(args.output_folder,save_image),image)
-    return y_pred
+    if args.test_mode:
+        return boxes_and_transcripts_data, y_pred
+    return boxes_and_transcripts_data
 

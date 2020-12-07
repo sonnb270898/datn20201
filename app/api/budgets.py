@@ -26,7 +26,7 @@ def get_all_budgets():
 def get_budget(id):
     try:
         cursor = mysql.get_db().cursor()
-        cursor.execute("select * from budget where id={}".format(id))
+        cursor.execute("select * from budget where id='{}' and user_id='{}'".format(id, g.user_id))
         budget = cursor.fetchone()
         if budget:
             fromDate, toDate = budget[2].strftime("%Y-%m-%d"), budget[3].strftime("%Y-%m-%d")
@@ -38,6 +38,7 @@ def get_budget(id):
                     "date": x[1].strftime("%d/%m/%Y"),
                     "total": x[2],
                     "merchant": x[3],
+                    "category": x[4],
                     },receipt))
                 return {"message":"successful", "result":result}, 200
             return {"message":"successful", "result":[]}, 200
@@ -55,8 +56,9 @@ def create_budget():
                 values (%s,%s,%s,%s)",
                 (among, fromDate, toDate, user_id))
         mysql.get_db().commit()
-
+        b_id = cursor.lastrowid
         result = {
+            "id": b_id,
             "among": among,
             "fromDate": fromDate,
             "toDate": toDate,
@@ -86,5 +88,14 @@ def update_budget(id):
 
 @budgets.route('/<id>', methods=['DELETE'])
 def delete_product(id):
-    pass
+    try:
+        cursor = mysql.get_db().cursor()
+        cursor.execute(""" 
+            delete from budget
+            where id = '{}'
+        """.format(id))
+
+        return {"message":"successful"}, 200
+    except Exception as e:
+        print(e)
 

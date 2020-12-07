@@ -4,7 +4,7 @@ from .budgets import budgets
 from .reports import reports
 from .login import login_route
 
-from run import app
+from app import app
 from flask_login import current_user, login_required
 from flask import url_for, redirect, g
 

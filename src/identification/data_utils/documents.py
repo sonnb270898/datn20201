@@ -233,18 +233,6 @@ class Document:
             relation_features[i, j, 5] = len(transcript_j) / (len(transcript_i)) \
                 if len(transcript_j) / (len(transcript_i)) is not None else -1  # T_j/T_i
 
-            relation_features[i, j, 6] = (center_i[0] / w) \
-                if (center_i[0] / w) is not None else -1  # xi/w
-
-            relation_features[i, j, 7] = (center_i[1] / h) \
-                if (center_i[1] / h) is not None else -1  # yi/h
-
-            relation_features[i, j, 8] = (center_j[0] / w) \
-                if (center_j[0] / w) is not None else -1  # xj/w
-
-            relation_features[i, j, 9] = (center_j[1] / h) \
-                if (center_j[1] / h) is not None else -1  # yj/h
-
 class TestingDocument:
     def __init__(self, image, boxes_and_transcripts_data, iob_tagging_type: str = 'box_level', image_index=None):
         '''
