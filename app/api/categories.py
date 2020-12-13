@@ -23,7 +23,7 @@ def get_all_categories():
 @categories.route('/', methods=['POST'])
 def create_category():
     try:
-        name, icon = request.json['name'], request.json['icon']
+        name, icon = request.json.get('name',""), request.json.get('icon',"")
         cursor = mysql.get_db().cursor()
         cursor.execute("insert into \
                 category (name, icon, user_id) \
@@ -43,7 +43,7 @@ def create_category():
 @categories.route('/<id>', methods=['PUT'])
 def update_category(id):
     try:
-        name, icon = request.json['name'], request.json['icon']
+        name, icon = request.json.get('name',""), request.json.get('icon',"")
         cursor = mysql.get_db().cursor()
         cursor.execute("""  update category
                             set name='{}', icon='{}'
@@ -61,11 +61,19 @@ def update_category(id):
 @categories.route('/<id>', methods=['DELETE'])
 def delete_category(id):
     try:
-        print(id)
         cursor = mysql.get_db().cursor()
-        cursor.execute("""  delete from category 
-                            where id='{}'""".format(id))
-        mysql.get_db().commit()
-        return {"message":"successful"}, 200
+        cursor.execute("""  select id from receipt 
+                            where category_id='{}'""".format(id))
+        receipt = cursor.fetchall()
+
+        cursor.execute("""  select id from budget 
+                            where category_id='{}'""".format(id))
+        category = cursor.fetchall()
+        if not (receipt and category):
+            cursor.execute("""  delete from category 
+                                where id='{}'""".format(id))
+            mysql.get_db().commit()
+            return {"message":"successful"}, 200
+        return {"message":"Fail"}, 404
     except Exception as e:
         print(e)

@@ -7,3 +7,4 @@ res/
 .vscode/
 test.py
 .env
+static/

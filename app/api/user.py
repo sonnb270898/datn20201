@@ -35,7 +35,7 @@ class User(UserMixin):
             print(e)
 
     @staticmethod
-    def edit_usercreate_user(id, email, name, displayName='', photoURL=''):
+    def edit_user(id, email, name, displayName='', photoURL=''):
         try:
             cursor = mysql.get_db().cursor()
             cursor.execute(

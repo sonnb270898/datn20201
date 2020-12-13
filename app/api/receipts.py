@@ -8,6 +8,7 @@ import cv2
 import numpy as np
 from flask_login import login_required
 from werkzeug.utils import secure_filename
+import uuid
 
 UPLOAD_FOLDER = os.path.join(dirname(dirname(__file__)),'static')
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
@@ -35,7 +36,7 @@ def get_all_receipts():
         #     date = [request.args.get('year','2020'), request.args.get('month','01'), request.args.get('day','01')]
         #     cursor.execute("select * from receipt where purchaseDate >= '{}' and user_id='{}' ".format('-'.join(date), g.user_id))
         
-        fromDate, toDate = request.json["fromDate"], request.json["toDate"]
+        fromDate, toDate = request.args.get("fromDate",""), request.args.get("toDate","")
         cursor.execute("""  select r.*, c.name 
                             from receipt r, category c
                             where r.user_id='{}' and r.category_id = c.id and
@@ -101,8 +102,8 @@ def get_receipt(id):
 @receipts.route('/', methods=['POST'])
 def create_receipt():
     try:
-        (purchaseDate, total, merchant, category_id, url_image) = (request.json["purchaseDate"], request.json["total"],\
-                                                                request.json["merchant"], request.json["category_id"], request.json["url_image"])
+        (purchaseDate, total, merchant, category_id, url_image) = (request.json.get("purchaseDate",""), request.json.get("total",""),\
+                                                                request.json.get("merchant",""), request.json.get("category_id",""), request.json.get("url_image",""))
         products = request.json["products"]
         # products_query = ",".join(["({},{},{})".format(x["name"], x["price"], 1) for x in products])
         # print("""insert into
@@ -142,7 +143,7 @@ def create_receipt_from_img():
     try:
         file, category = request.files['image'], request.form.get('category', '')
         filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        file.save(os.path.join(UPLOAD_FOLDER, str(uuid.uuid4())+filename))
         
         # image = np.asarray(bytearray(file.read()), dtype="uint8")
         # image = cv2.imdecode(image, cv2.IMREAD_COLOR)
@@ -162,7 +163,7 @@ def create_receipt_from_img():
         #         (p[0], float(p[1]), receipt_id))
 
         # mysql.get_db().commit()
-        # return {"message":"successful", "result": res}, 200
+        return {"message":"successful", "result": "res"}, 200
     except Exception as e:
         print(e)
     
@@ -170,8 +171,8 @@ def create_receipt_from_img():
 @receipts.route('/<id>', methods=['PUT'])
 def update_receipt(id):
     try:
-        (purchaseDate, total, merchant, category_id, url_image) = (request.json['purchaseDate'], request.json['total'],\
-                                                            request.json['merchant'], request.json['category_id'], request.json['url_image'])
+        (purchaseDate, total, merchant, category_id, url_image) = (request.json.get("purchaseDate",""), request.json.get("total",""),\
+                                                                request.json.get("merchant",""), request.json.get("category_id",""), request.json.get("url_image",""))
         products = request.json['products']
         cursor = mysql.get_db().cursor()
 

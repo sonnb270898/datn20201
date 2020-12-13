@@ -9,4 +9,8 @@ scikit-learn==0.21.2
 scipy==1.5.2
 torch==1.5.0+cu101
 torchvision==0.6.0+cu101
-
+flask==1.1.2
+flask-login==0.4.1
+flask-mysql==1.5.1
+transformers==2.11.0
+torchtext==0.6.0

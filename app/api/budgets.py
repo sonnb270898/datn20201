@@ -7,7 +7,7 @@ budgets = Blueprint("budgets", __name__, url_prefix='/budgets')
 @budgets.route('/', methods=['GET'])
 def get_all_budgets():
     try:
-        fromDate, toDate = request.json['fromDate'], request.json['toDate']
+        fromDate, toDate = request.args.get('fromDate',""), request.args.get('toDate',"")
 
         cursor = mysql.get_db().cursor()
         cursor.execute("""  select b.*, c.name from budget b, category c
@@ -60,8 +60,8 @@ def get_budget(id):
 @budgets.route('/', methods=['POST'])
 def create_budget():
     try:
-        (among, fromDate, toDate, category_id) = ( request.json['among'], request.json['fromDate'],\
-                                                    request.json['toDate'], request.json['category_id'])
+        (among, fromDate, toDate, category_id) = ( request.json.get('among',""), request.json.get('fromDate',""),\
+                                                    request.json.get('toDate',""), request.json.get('category_id',""))
         cursor = mysql.get_db().cursor()
         cursor.execute("insert into \
                 budget (among, fromDate, toDate, category_id) \
@@ -83,8 +83,8 @@ def create_budget():
 @budgets.route('/<id>', methods=['PUT'])
 def update_budget(id):
     try:
-        (among, fromDate, toDate, category_id) = (  request.json['among'], request.json['fromDate'],\
-                                                    request.json['toDate'], request.json['category_id'])
+        (among, fromDate, toDate, category_id) = ( request.json.get('among',""), request.json.get('fromDate',""),\
+                                                    request.json.get('toDate',""), request.json.get('category_id',""))
         cursor = mysql.get_db().cursor()
         cursor.execute("update budget \
                         set among=%s, fromDate=%s, toDate=%s, category_id=%s \
@@ -102,7 +102,7 @@ def update_budget(id):
         print(e)
 
 @budgets.route('/<id>', methods=['DELETE'])
-def delete_product(id):
+def delete_budget(id):
     try:
         cursor = mysql.get_db().cursor()
         cursor.execute(""" 

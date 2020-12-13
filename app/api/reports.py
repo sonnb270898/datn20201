@@ -9,7 +9,7 @@ reports = Blueprint("reports", __name__, url_prefix='/reports')
 def report_by_week_of_month():
     try:
         cursor = mysql.get_db().cursor()
-        (fromDate, toDate) = (request.json['fromDate'], request.json['toDate'])
+        (fromDate, toDate) = (request.args['fromDate'], request.args['toDate'])
         cursor.execute("""select * from receipt 
                             where purchaseDate >= '{}' and purchaseDate <= '{}' and user_id='{}'""".format(fromDate, toDate, g.user_id))
         res = cursor.fetchall()
@@ -35,7 +35,7 @@ def report_by_week_of_month():
 def report_by_category():
     try:
         cursor = mysql.get_db().cursor()
-        (fromDate, toDate) = (request.json['fromDate'], request.json['toDate'])
+        (fromDate, toDate) = (request.args['fromDate'], request.args['toDate'])
 
         cursor.execute("""  select category.name, sum(receipt.total)
                             from receipt, category 

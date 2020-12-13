@@ -83,14 +83,16 @@ def logout():
     logout_user()
     return redirect(url_for("index"))
 
-@login_route.route("/login/user", methods=['GET'])
+@login_route.route("/login/user", methods=['POST'])
 def check_user_login():
     uid = request.json["uid"]
     email = request.json["email"]
-    name = request.json["name"]
-    user = User(id=uid, name=name, email=email)
+    name = request.json.get("firstName","") + " " + request.json.get("lastName","")
+    displayName = request.json["displayName"]
+    photoURL = request.json.get("name","")
+    user = User(id=uid, name=name, email=email, displayName=displayName, photoURL=photoURL)
 
     if not User.get_user(uid):
-        User.create_user(uid, email, name)
+        User.create_user(id=uid, name=name, email=email, displayName=displayName, photoURL=photoURL)
     login_user(user, remember=True)
     return redirect(url_for('receipt.get_all_receipts'))
