@@ -1,30 +1,27 @@
 from flask import request, redirect, url_for, Blueprint, g
 from db_connection import mysql
 import datetime
+import dateutil.parser
 
 reports = Blueprint("reports", __name__, url_prefix='/reports')
 
-now = datetime.datetime.now()
-user = 1
-
-@reports.route('/', methods=['GET'])
+@reports.route('/byweek', methods=['GET'])
 def report_by_week_of_month():
     try:
         cursor = mysql.get_db().cursor()
-        current_month = now.strftime('%m')
-        current_year = now.strftime('%Y')
-        month = request.args.get('month',current_month)
-        year = request.args.get('year',current_year)
-        cursor.execute("select * from receipt where date >= '{}' and user_id='{}'".format('-'.join([year, month, '01']), g.user_id))
+        (fromDate, toDate) = (request.json['fromDate'], request.json['toDate'])
+        cursor.execute("""select * from receipt 
+                            where purchaseDate >= '{}' and purchaseDate <= '{}' and user_id='{}'""".format(fromDate, toDate, g.user_id))
         res = cursor.fetchall()
         if res:
             result = [{"name" : "week"+str(i), "among":0 } for i in range(1,5)]
             for x in res:
-                if int(x[1].strftime('%d')) < 8:
+                convert_2_date = dateutil.parser.parse(x[1]).strftime('%d')
+                if int(convert_2_date) < 8:
                     result[1]['among'] += float(x[2])
-                elif int(x[1].strftime('%d')) < 15:
+                elif int(convert_2_date) < 15:
                     result[2]['among'] += float(x[2])
-                elif int(x[1].strftime('%d')) < 22:
+                elif int(convert_2_date) < 22:
                     result[3]['among'] += float(x[2])
                 else:
                     result[4]['among'] += float(x[2])
@@ -38,16 +35,13 @@ def report_by_week_of_month():
 def report_by_category():
     try:
         cursor = mysql.get_db().cursor()
-        current_month = now.strftime('%m')
-        current_year = now.strftime('%Y')
-        month = request.args.get('month',current_month)
-        year = request.args.get('year',current_year)
+        (fromDate, toDate) = (request.json['fromDate'], request.json['toDate'])
 
-        cursor.execute("""  select category, sum(price)
-                            from receipt, product 
-                            where date >= '{}' and user_id='{}'
-                            and receipt.id = product.receipt_id
-                            group by category """.format('-'.join([year, month, '01']), g.user_id))
+        cursor.execute("""  select category.name, sum(receipt.total)
+                            from receipt, category 
+                            where purchaseDate >= '{}' and purchaseDate <= '{}' and receipt.user_id='{}'
+                            and receipt.category_id = category.id
+                            group by category.name """.format(fromDate, toDate, g.user_id))
         res = cursor.fetchall()
         if res:
             result = list(map(lambda x:{

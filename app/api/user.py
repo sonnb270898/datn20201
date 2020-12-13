@@ -2,12 +2,12 @@ from flask_login import UserMixin
 from db_connection import mysql
 
 class User(UserMixin):
-    def __init__(self, id, email, name, dateOfBirth='', address=''):
+    def __init__(self, id, email, name, displayName='', photoURL=''):
         self.id = id
         self.email = email
         self.name = name
-        self.dateOfBirth = dateOfBirth
-        self.address = address
+        self.displayName = displayName
+        self.photoURL = photoURL
         
     @staticmethod
     def get_user(id):
@@ -22,26 +22,26 @@ class User(UserMixin):
             print(e)
 
     @staticmethod
-    def create_user(id, email, name, dateOfBirth='', address=''):
+    def create_user(id, email, name, displayName='', photoURL=''):
         try:
             cursor = mysql.get_db().cursor()
             cursor.execute(
-                "INSERT INTO user (id, email, name, dateOfBirth, address) "
+                "INSERT INTO user (id, email, displayName, name, photoURL) "
                 "VALUES (%s, %s, %s, %s, %s)",
-                (id, email, name),
+                (id, email, displayName, name, photoURL),
             )
             # mysql.get_db().commit()
         except Exception as e:
             print(e)
 
     @staticmethod
-    def edit_user(id, email, name, dateOfBirth='', address=''):
+    def edit_usercreate_user(id, email, name, displayName='', photoURL=''):
         try:
             cursor = mysql.get_db().cursor()
             cursor.execute(
-                "update user (id, email, name, dateOfBirth, address) "
+                "update user (id, email, displayName, name, photoURL) "
                 "set (%s, %s, %s, %s, %s)",
-                (id, email, name, dateOfBirth, address),
+                (id, email, displayName, name, photoURL),
             )
             # mysql.get_db().commit()
         except Exception as e:

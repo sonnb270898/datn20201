@@ -5,4 +5,4 @@ from app import app
 
 if __name__ == '__main__':
     from api import *
-    app.run(debug=False, ssl_context="adhoc")
+    app.run(debug=True, ssl_context="adhoc")

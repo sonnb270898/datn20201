@@ -7,4 +7,4 @@ load_dotenv(dotenv_path)
 
 from flask import Flask, g
 import logging as logger
-app = Flask(__name__)
+app = Flask(__name__,static_url_path='/static')
