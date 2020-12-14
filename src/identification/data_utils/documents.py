@@ -118,7 +118,7 @@ class Document:
                 transcript_i = transcripts[i]
 
                 # get resized images's boxes coordinate, used to ROIAlign in Encoder layer
-                resized_box_i = [int(np.round(pos * 1)) if i % 2 == 0 else int(np.round(pos * 1))
+                resized_box_i = [int(np.round(pos * x_scale)) if i % 2 == 0 else int(np.round(pos * y_scale))
                                  for i, pos in enumerate(box_i)]
 
                 # resized_rect_output_i = cv2.minAreaRect(np.array(resized_box_i, dtype=np.float32).reshape(4, 2))
@@ -234,7 +234,8 @@ class Document:
                 if len(transcript_j) / (len(transcript_i)) is not None else -1  # T_j/T_i
 
 class TestingDocument:
-    def __init__(self, image, boxes_and_transcripts_data, iob_tagging_type: str = 'box_level', image_index=None):
+    def __init__(self, image, boxes_and_transcripts_data, iob_tagging_type: str = 'box_level',
+                    image_index=None, resized_image_size: Tuple[int, int] = (480, 960)):
         '''
         An item returned by dataset.
         :param iob_tagging_type: 'box_level', 'document_level', 'box_and_within_box_level'
@@ -250,6 +251,7 @@ class TestingDocument:
         assert iob_tagging_type in ['box_level', 'document_level', 'box_and_within_box_level'], \
             'iob tagging type {} is not supported'.format(iob_tagging_type)
         self.iob_tagging_type = iob_tagging_type
+        self.resized_image_size = resized_image_size
 
         # read boxes, transcripts, and entity types of boxes in one documents from boxes_and_transcripts file
         # match with regex pattern: index,x1,y1,x2,y2,x3,y3,x4,y4,transcript,type from boxes_and_transcripts tsv file
@@ -257,7 +259,6 @@ class TestingDocument:
         # label = pd.read_csv(label_file.as_posix(),sep='\n',header=None)[0].to_list()
 
         boxes, transcripts, box_entity_types = [], [], []
-
         for index, points, transcript, _ in boxes_and_transcripts_data:
             if len(transcript) == 0:
                 transcript = ' '
@@ -272,6 +273,11 @@ class TestingDocument:
         relation_features = np.zeros((boxes_num, boxes_num, 6))
 
         height, width, _ = image.shape
+
+        image = cv2.resize(image, self.resized_image_size, interpolation=cv2.INTER_LINEAR)
+        x_scale = self.resized_image_size[0] / width
+        y_scale = self.resized_image_size[1] / height
+
         # get min area box for each (original) boxes, for calculate initial relation features
         min_area_boxes = [cv2.minAreaRect(np.array(box, dtype=np.float32).reshape(4, 2)) for box in
                           boxes[:boxes_num]]
@@ -283,8 +289,8 @@ class TestingDocument:
             transcript_i = transcripts[i]
 
             # get resized images's boxes coordinate, used to ROIAlign in Encoder layer
-            resized_box_i = [int(np.round(pos * 1)) if i % 2 == 0 else int(np.round(pos * 1))
-                             for i, pos in enumerate(box_i)]
+            resized_box_i = [int(np.round(pos * x_scale)) if i % 2 == 0 else int(np.round(pos * y_scale))
+                                 for i, pos in enumerate(box_i)]
             resized_box_i = np.array(resized_box_i).reshape((8,))
             resized_boxes.append(resized_box_i)
 
@@ -329,7 +335,6 @@ class TestingDocument:
         :param transcripts:
         :return:
         '''
-        w,h = (480,960)
         for j in range(boxes_num):
             transcript_j = transcripts[j]
 
@@ -345,7 +350,7 @@ class TestingDocument:
 
             # Center distances of boxes on x-axis.
             relation_features[i, j, 0] = np.abs(center_i[0] - center_j[0]) \
-                if np.abs(center_i[0] - center_j[0])/w is not None else -1  # x_ij
+                if np.abs(center_i[0] - center_j[0]) is not None else -1  # x_ij
 
             # Center distances of boxes on y-axis.
             relation_features[i, j, 1] = np.abs(center_i[1] - center_j[1]) \

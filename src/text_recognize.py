@@ -53,8 +53,8 @@ def load_recognizer():
     return model, converter
 
 def extract_text(model,converter,image,poly,image_path=''):
-
-    boxes_sorted_list, num_rows_dict = sorting_bounding_box(poly)
+    h, w, _= image.shape
+    boxes_sorted_list, num_rows_dict = sorting_bounding_box(poly, w, h)
     text_results = []
     # prepare data
     AlignCollate_demo = AlignCollate(imgH=args.imgH, imgW=args.imgW, keep_ratio_with_pad=args.PAD)
@@ -115,9 +115,10 @@ def extract_text(model,converter,image,poly,image_path=''):
                 # res = res + (" ".join(text_results[tmp:tmp+i[0]])) + ' '
                 flatten_arr = np.array(i[1]).flatten()
                 # point_2_string = list(map(str, flatten_arr))
-                text_box = re.sub(r"[\"\']",''," ".join(text_results[tmp:tmp+i[0]]).replace(',','\,'))
+                # text_box = re.sub(r"[\"\']",''," ".join(text_results[tmp:tmp+i[0]]).replace(',','\,'))
+                text_box = " ".join(text_results[tmp:tmp+i[0]]).replace(',','\,')
                 img2csv.append([1, flatten_arr, text_box, 'other'])
-                # img2csv.append([1,*(flatten_arr.tolist())," ".join(text_results[tmp:tmp+i[0]])])
+                # img2csv.append([1,*(flatten_arr.tolist())," ".join(text_results[tmp:tmp+i[0]]),'other'])
                 tmp += i[0]
             # res += '\n'
         #write to csv:

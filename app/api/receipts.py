@@ -12,13 +12,12 @@ import uuid
 
 UPLOAD_FOLDER = os.path.join(dirname(dirname(__file__)),'static')
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
-# try:
-#     sys.path.append(join(dirname(dirname(dirname(__file__))),'src/'))
-#     from src.handle_img import *
-#     from src.parse_config import ConfigParser
-
-# except ImportError as e:
-#     print('xxxxxxxxxx',e)
+try:
+    sys.path.append(join(dirname(dirname(dirname(__file__))),'src/'))
+    from src.handle_img import *
+    from src.parse_config import ConfigParser
+except ImportError as e:
+    print(e)
 
 receipts = Blueprint("receipts", __name__, url_prefix='/receipts')
 
@@ -141,29 +140,34 @@ def create_receipt():
 @receipts.route('/upload', methods=['POST'])
 def create_receipt_from_img():
     try:
-        file, category = request.files['image'], request.form.get('category', '')
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, str(uuid.uuid4())+filename))
+        file, category_id = request.files['image'], request.form.get('category_id', '')
         
-        # image = np.asarray(bytearray(file.read()), dtype="uint8")
-        # image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        # res = extract_receipt(image)
-        # print(res)
-        # cursor = mysql.get_db().cursor()
-        # cursor.execute("insert into \
-        #         receipt (date, total, merchant, category, user_id) \
-        #         values (%s,%s,%s,%s,%s)",
-        #         (res['date'], float(res['total']), 'merchant', category, g.user_id))
-        # #get receipt_id
-        # receipt_id = cursor.lastrowid
-        # for p in res['pp']:
-        #     cursor.execute("insert into \
-        #         product (name, price, receipt_id) \
-        #         values (%s,%s,%s,%s)",
-        #         (p[0], float(p[1]), receipt_id))
+        #conversion image
+        image = np.fromstring(file.read(), dtype="uint8")
+        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+        
+        #extract data
+        res = extract_receipt(image)
+        
+        filename = str(uuid.uuid4()) + secure_filename(file.filename)
+        file.save(os.path.join(UPLOAD_FOLDER, filename))
+        url_image = "https://localhost:5000/static/" + filename
 
-        # mysql.get_db().commit()
-        return {"message":"successful", "result": "res"}, 200
+        cursor = mysql.get_db().cursor()
+        cursor.execute("insert into \
+                receipt (purchaseDate, total, merchant, url_image, category_id, user_id) \
+                values (%s,%s,%s,%s,%s,%s)",
+                (res['date'], float(res['total']), res['company'], url_image, category_id, g.user_id))
+        #get receipt_id
+        receipt_id = cursor.lastrowid
+        
+        pp_value = ','.join(["('{}','{}','{}')".format(p[0], float(p[1]), receipt_id) for p in res['pp']])
+        cursor.execute("insert into \
+            product (name, price, receipt_id) \
+            values " + pp_value)
+
+        mysql.get_db().commit()
+        return {"message":"successful", "result": res}, 200
     except Exception as e:
         print(e)
     

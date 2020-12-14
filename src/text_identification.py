@@ -1,7 +1,8 @@
 import torch
 from tqdm import tqdm
 from pathlib import Path
-
+# import pandas as pd
+# import csv
 from torch.utils.data.dataloader import DataLoader
 from allennlp.data.dataset_readers.dataset_utils.span_utils import bio_tags_to_spans
 
@@ -13,7 +14,7 @@ try:
     from identification.utils.util import iob_index_to_str, text_index_to_str
     from identification.utils.class_utils import set_vocab
     from opt import get_config
-    from utils.label_rules import is_price, is_product, is_total, get_final_total
+    from utils.label_rules import Label_rules
 except ImportError:
     from src.parse_config import ConfigParser
     import src.identification.model.pick as pick_arch_module
@@ -22,7 +23,7 @@ except ImportError:
     from src.identification.utils.util import iob_index_to_str, text_index_to_str
     from src.identification.utils.class_utils import set_vocab
     from src.opt import get_config
-    from src.utils.label_rules import is_price, is_product, is_total, get_final_total
+    from src.utils.label_rules import Label_rules
 
 import cv2
 import os
@@ -91,27 +92,29 @@ def extract_information(image, boxes_and_transcripts_data, pick_model, save_imag
                     for b_num, w in enumerate(word_list):
                         if range_tuple[0] in range(*w[0]):
                             boxes_and_transcripts_data[b_num][3] = entity_name
-                
+    
+    rules = Label_rules(image_size=image.shape[:2])        
     i = 0
     while i <= 2 :
         for idx, box in enumerate(boxes_and_transcripts_data):
             if i == 0 and box[3] == 'other': 
-                label, is_total_bool = is_total(boxes_and_transcripts_data, idx)
+                label, is_total_bool = rules.is_total(boxes_and_transcripts_data, idx)
                 if is_total_bool:
                     box[3] = label
-                elif is_product(boxes_and_transcripts_data, idx):
-                    box[3] = 'product'
-                elif is_price(boxes_and_transcripts_data, idx):
+                # elif rules.is_product(boxes_and_transcripts_data, idx):
+                #     box[3] = 'product'
+                elif rules.is_price(boxes_and_transcripts_data, idx):
                     box[3] = 'price'
                 else:
                     box[3] = 'other'
-            elif i>0 and box[3] in ['product','price','other','total']:
-                label, is_total_bool = is_total(boxes_and_transcripts_data, idx)
+            # elif i>0 and box[3] in ['product','price','other','total']:
+            elif i>0 and box[3] in ['total','price']:
+                label, is_total_bool = rules.is_total(boxes_and_transcripts_data, idx)
                 if is_total_bool:
                     box[3] = label
-                elif is_product(boxes_and_transcripts_data, idx):
-                    box[3] = 'product'
-                elif is_price(boxes_and_transcripts_data, idx):
+                # elif rules.is_product(boxes_and_transcripts_data, idx):
+                #     box[3] = 'product'
+                elif rules.is_price(boxes_and_transcripts_data, idx):
                     box[3] = 'price'
                 else:
                     box[3] = 'other'
@@ -121,15 +124,22 @@ def extract_information(image, boxes_and_transcripts_data, pick_model, save_imag
     # if(len(boxes_and_transcripts_data[(boxes_and_transcripts_data[:,3]=="subtotal") | (boxes_and_transcripts_data[:,3]=="total")]) > 0):
     if(len(boxes_and_transcripts_data[boxes_and_transcripts_data[:,3]=="subtotal"]) > 0) or \
         (len(boxes_and_transcripts_data[boxes_and_transcripts_data[:,3]=="total"]) > 2):
-        boxes_and_transcripts_data = get_final_total(boxes_and_transcripts_data)
+        boxes_and_transcripts_data = Label_rules.get_final_total(boxes_and_transcripts_data)
+
+    boxes_and_transcripts_data = rules.get_final_product_price(boxes_and_transcripts_data)
     
-    y_pred = []
-    for idx, box in enumerate(boxes_and_transcripts_data):
-        if box[3] in ['product','price','total','company','address','date']:
-            cv2.polylines(image, [box[1].reshape((-1, 1, 2))], True, color=(0, 0, 255), thickness=2)
-            cv2.putText(image, box[3], (box[1][4],box[1][5]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
-        y_pred.append(box[3])
-    cv2.imwrite(os.path.join(args.output_folder,save_image),image)
+    # y_pred = []
+    # img2csv=[]
+    # for idx, box in enumerate(boxes_and_transcripts_data):
+    #     if box[3] in ['product','price','total','company','address','date']:
+    #         cv2.polylines(image, [box[1].reshape((-1, 1, 2))], True, color=(0, 0, 255), thickness=2)
+    #         cv2.putText(image, box[3], (box[1][4],box[1][5]), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 1, cv2.LINE_AA)
+    #     y_pred.append(box[3])
+    #     img2csv.append([box[0],*(box[1].tolist()),box[2],box[3]])
+    # cv2.imwrite(os.path.join(args.output_folder,save_image),image)
+    # df = pd.DataFrame(img2csv)
+    # df.to_csv('/home/son/Downloads/weights/test/1111/'+save_image.split('.')[0]+'.tsv', index=False, header=False,
+    #             quotechar='',escapechar='\\',quoting=csv.QUOTE_NONE)
     if args.test_mode:
         return boxes_and_transcripts_data, y_pred
     return boxes_and_transcripts_data

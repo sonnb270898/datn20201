@@ -25,7 +25,7 @@ identifier = load_identifier()
 
 def extract_receipt(image_path):
     image = loadImage(image_path)
-    image = cv2.resize(image,(480,960))
+    # image = cv2.resize(image,(480,960))
     bboxes, polys, score_text = extract_text_box(net, image, args.text_threshold,
                                                 args.link_threshold, args.low_text,
                                                 args.cuda, args.poly, refine_net)
@@ -35,6 +35,6 @@ def extract_receipt(image_path):
     return res
 
 if __name__ == '__main__':
-    image_path = '/home/son/Desktop/datn20201/resource/img/1086-receipt.jpg'
+    image_path = '/home/son/Downloads/CORD/full_receipt_en/images/1141-receipt.jpg'
     image = cv2.imread(image_path)
     extract_receipt(image)

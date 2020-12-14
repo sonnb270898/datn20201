@@ -21,6 +21,10 @@ def loadImage(img_file):
     if img.shape[2] == 4:
         img = img[:,:,:3]
 
+    h, w, _ = img.shape
+    width = min(1000, w)
+    height = min(int(width*2),2000)
+    img = cv2.resize(img,(width,height))
     return img
 
 def normalizeMeanVariance(in_img, mean=(0.485, 0.456, 0.406), variance=(0.229, 0.224, 0.225)):
@@ -81,8 +85,8 @@ def get_4_points(arr):
     x2, y2 = np.max(arr, 0)
     return [[x1,y1],[x2,y1],[x2,y2],[x1,y2]]
 
-min_dis = 15
-def get_merge_boxes(points):
+min_dis = 20
+def get_merge_boxes(points, w):
     # final_points = []
     num_rows_dict = defaultdict(list)
     for i, arr in enumerate(points):
@@ -91,7 +95,7 @@ def get_merge_boxes(points):
         arr_length = len(arr)
         for j in range(arr_length-1):
             distance = arr[j+1][0][0] - arr[j][1][0]
-            if distance < min_dis:
+            if distance < min(min_dis*round(w/480, 2),25):
                 tmp[idx] += arr[j+1].copy()
             else:
                 # final_points.append(get_4_points(tmp[idx]))
@@ -103,14 +107,14 @@ def get_merge_boxes(points):
         num_rows_dict[i].append((int(len(tmp[idx])/4), get_4_points(tmp[idx])))
     return num_rows_dict
 
-def sorting_bounding_box(points):
+def sorting_bounding_box(points, w, h):
     point_sum = list(map(lambda x: [x.tolist(), x[0][1]], points))
     boxes_sorted_list = []
     row_boxes = []
     while len(point_sum) != 0:
         tmp_arr = [arr for arr in sorted(point_sum, key=lambda x: x[1])]
         init_box = tmp_arr[0]
-        thresh_value = abs(init_box[0][0][1] - init_box[0][3][1]) / 2 + 5
+        thresh_value = abs(init_box[0][0][1] - init_box[0][3][1]) / 2
         tmp_arr.remove(init_box)
         point_sum.remove(init_box)
         filter_arr = [i for i in tmp_arr if (abs(i[0][0][1] - init_box[0][0][1]) <= thresh_value)]
@@ -122,5 +126,5 @@ def sorting_bounding_box(points):
         sorted_filter_arr = sorted(filter_arr, key=lambda x: x[0][0])
         row_boxes.append(sorted_filter_arr)
         boxes_sorted_list += sorted_filter_arr
-    num_rows_dict = get_merge_boxes(row_boxes)
+    num_rows_dict = get_merge_boxes(row_boxes, w)
     return boxes_sorted_list, num_rows_dict
