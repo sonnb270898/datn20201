@@ -4,6 +4,49 @@ import datetime
 
 budgets = Blueprint("budgets", __name__, url_prefix='/budgets')
 
+def get_product_in_receipt(receipt_id):
+    try:
+        cursor = mysql.get_db().cursor()
+        cursor.execute("""  select * from product 
+                            where receipt_id='{}'""".format(receipt_id))
+
+        products = cursor.fetchall()
+        if products:
+            result = list(map(lambda x: {
+                "id": x[0],
+                "name": x[1],
+                "price": x[2],
+            },products))
+            return result
+        return []
+    except Exception as e:
+        print(e)
+
+def get_receipt_in_budget(budget):
+    try:
+        cursor = mysql.get_db().cursor()
+        among, fromDate, toDate, category_id, category = budget[1] ,budget[2], budget[3], budget[4], budget[5]
+        cursor.execute("""  select r.*, c.name from receipt r, category c
+                            where r.user_id='{}' and r.category_id=c.id and r.category_id={}
+                            and purchaseDate >= '{}' and purchaseDate <= '{}'""".format(g.user_id, category_id, fromDate, toDate))
+
+        receipt_list = cursor.fetchall()
+        if receipt_list:
+            result = list(map(lambda x: {
+                "id": x[0],
+                "purchaseDate": x[1],
+                "total": x[2],
+                "merchant": x[3],
+                "url_image": x[4],
+                "category": x[7],
+                "products": get_product_in_receipt(x[0]),
+                "user_id": g.user_id
+            },receipt_list))
+            return result
+        return []
+    except Exception as e:
+        print(e)
+
 @budgets.route('/', methods=['GET'])
 def get_all_budgets():
     try:
@@ -21,39 +64,11 @@ def get_all_budgets():
                 "among": x[1],
                 "fromDate": x[2],
                 "toDate": x[3],
-                "category": x[5]
+                "category": x[5],
+                "receipts": get_receipt_in_budget(x)
             },budgets_list))
             return {"message":"successful", "result":result}, 200
         return {"message":"successful", "result":[]}, 200
-    except Exception as e:
-        print(e)
-
-@budgets.route('/<id>', methods=['GET'])
-def get_budget(id):
-    try:
-        cursor = mysql.get_db().cursor()
-        cursor.execute("select * from budget where id='{}'".format(id))
-        budget = cursor.fetchone()
-        if budget:
-            fromDate, toDate, category_id = budget[2], budget[3], budget[4]
-            cursor.execute("""  select r.*, c.name from receipt r, category c
-                                where r.user_id='{}' and r.category_id=c.id and r.category_id={}
-                                and purchaseDate >= '{}' and purchaseDate <= '{}'""".format(g.user_id, category_id, fromDate, toDate))
-
-            receipt = cursor.fetchall()
-            if receipt:
-                result = list(map(lambda x: {
-                    "id": x[0],
-                    "purchaseDate": x[1],
-                    "total": x[2],
-                    "merchant": x[3],
-                    "url_image": x[4],
-                    "category": x[7],
-                    "user_id": g.user_id
-                },receipt))
-                return {"message":"successful", "result":result}, 200
-            return {"message":"successful", "result":[]}, 200
-        return {"message":"No budget found", "result":[]}, 200
     except Exception as e:
         print(e)
 
