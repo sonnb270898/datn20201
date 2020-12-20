@@ -10,11 +10,10 @@ from flask_login import current_user, login_required
 from flask import url_for, redirect, g
 
 def check_islogin():
-    g.user_id = "112969690934792817704"
-    # if not current_user.is_authenticated:
-    #     return redirect(url_for('/login'))
-    # else: 
-    #     g.user_id = current_user.get_id()
+    if not current_user.is_authenticated:
+        return redirect(url_for('login.login'))
+    else: 
+        g.user_id = current_user.get_id()
 
 
 app.before_request_funcs = {

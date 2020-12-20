@@ -208,7 +208,7 @@ class Label_rules:
     
 def convert_result_to_json(boxes):
     result = {}
-    result['pp'] = []
+    result['products'] = []
     product = []
     price = []
     boxes_len = len(boxes)
@@ -217,7 +217,7 @@ def convert_result_to_json(boxes):
         if boxes[i][3] == 'product':
             __price = re.search(_price_pattern, boxes[i][2], re.IGNORECASE)
             if __price and __price.end() == len(boxes[i][2]):
-                result['pp'].append((' '.join([p[1] for p in product]),price[0][1]))
+                result['products'].append((' '.join([p[1] for p in product]),price[0][1]))
                 product = []
                 price = []
                 product.append((i, boxes[i][2][:__price.start()]))
@@ -231,7 +231,7 @@ def convert_result_to_json(boxes):
                             break
                     for p in product[:j]:
                         product_value = product_value + ' ' + p[1]
-                    result['pp'].append((product_value, price[0][1]))
+                    result['products'].append({"name": product_value, "price":price[0][1]})
                     del product[:j]
                     del price[0]
                     product_value = ''
@@ -247,13 +247,13 @@ def convert_result_to_json(boxes):
             if total:
                 result['total'] = total.group(1)
         elif boxes[i][3] == 'date':
-            result['date'] = search_date(boxes[i][2])
+            result['purchaseDate'] = search_date(boxes[i][2])
         elif boxes[i][3] == 'company':
-            result['company'] = result.get('company','') + boxes[i][2]
+            result['merchant'] = result.get('merchant','') + boxes[i][2]
     if len(price) != 0:
-        result['pp'].append((' '.join([p[1] for p in product]),price[0][1]))
-    if result.get('date','') == '':
-        result['date'] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        result['products'].append({"name": ' '.join([p[1] for p in product]), "price":price[0][1]})
+    if result.get('purchaseDate','') == '':
+        result['purchaseDate'] = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     return result
 
 def search_date(text):

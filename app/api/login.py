@@ -27,8 +27,8 @@ login_manager.init_app(app)
 #     return requests.get(os.environ.get("GOOGLE_DISCOVERY_URL")).json()
 
 @login_manager.user_loader
-def load_user(email):
-    return User.get_user(email)
+def load_user(uid):
+    return User.get_user(uid)
 
 # @login_route.route("/login")
 # def login():
@@ -81,7 +81,8 @@ def load_user(email):
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))
+    # return redirect(url_for("/login"))
+    return {"message":"logout successful"}
 
 @login_route.route("/login/user", methods=['POST'])
 def check_user_login():
@@ -89,10 +90,10 @@ def check_user_login():
     email = request.json["email"]
     name = request.json.get("firstName","") + " " + request.json.get("lastName","")
     displayName = request.json["displayName"]
-    photoURL = request.json.get("name","")
+    photoURL = request.json.get("photoURL","")
     user = User(id=uid, name=name, email=email, displayName=displayName, photoURL=photoURL)
 
     if not User.get_user(uid):
         User.create_user(id=uid, name=name, email=email, displayName=displayName, photoURL=photoURL)
     login_user(user, remember=True)
-    return redirect(url_for('receipt.get_all_receipts'))
+    return redirect(url_for('receipts.get_all_receipts'))

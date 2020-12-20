@@ -10,6 +10,7 @@ from flask_login import login_required
 from werkzeug.utils import secure_filename
 import uuid
 
+import time 
 UPLOAD_FOLDER = os.path.join(dirname(dirname(__file__)),'static')
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 try:
@@ -29,12 +30,7 @@ def allowed_file(filename):
 def get_all_receipts():
     try:
         cursor = mysql.get_db().cursor()
-        # if len(request.args) == 0:
-        #         cursor.execute("select * from receipt where user_id='{}'".format(g.user_id))
-        # else:
-        #     date = [request.args.get('year','2020'), request.args.get('month','01'), request.args.get('day','01')]
-        #     cursor.execute("select * from receipt where purchaseDate >= '{}' and user_id='{}' ".format('-'.join(date), g.user_id))
-        
+
         fromDate, toDate = request.args.get("fromDate",""), request.args.get("toDate","")
         cursor.execute("""  select r.*, c.name 
                             from receipt r, category c
@@ -104,10 +100,6 @@ def create_receipt():
         (purchaseDate, total, merchant, category_id, url_image) = (request.json.get("purchaseDate",""), request.json.get("total",""),\
                                                                 request.json.get("merchant",""), request.json.get("category_id",""), request.json.get("url_image",""))
         products = request.json["products"]
-        # products_query = ",".join(["({},{},{})".format(x["name"], x["price"], 1) for x in products])
-        # print("""insert into
-        #         product (name, price, receipt_id)
-        #         values """+ products_query)
     
         cursor = mysql.get_db().cursor()
         cursor.execute("insert into \
@@ -140,7 +132,8 @@ def create_receipt():
 @receipts.route('/upload', methods=['POST'])
 def create_receipt_from_img():
     try:
-        file, category_id = request.files['image'], request.form.get('category_id', '')
+        
+        file = request.files['image']
         
         #conversion image
         image = np.fromstring(file.read(), dtype="uint8")
@@ -153,20 +146,22 @@ def create_receipt_from_img():
         file.save(os.path.join(UPLOAD_FOLDER, filename))
         url_image = "https://localhost:5000/static/" + filename
 
-        cursor = mysql.get_db().cursor()
-        cursor.execute("insert into \
-                receipt (purchaseDate, total, merchant, url_image, category_id, user_id) \
-                values (%s,%s,%s,%s,%s,%s)",
-                (res['date'], float(res['total']), res['company'], url_image, category_id, g.user_id))
-        #get receipt_id
-        receipt_id = cursor.lastrowid
+        # cursor = mysql.get_db().cursor()
+        # cursor.execute("insert into \
+        #         receipt (purchaseDate, total, merchant, url_image, category_id, user_id) \
+        #         values (%s,%s,%s,%s,%s,%s)",
+        #         (res['date'], float(res['total']), res['company'], url_image, category_id, g.user_id))
+        # #get receipt_id
+        # receipt_id = cursor.lastrowid
         
-        pp_value = ','.join(["('{}','{}','{}')".format(p[0], float(p[1]), receipt_id) for p in res['pp']])
-        cursor.execute("insert into \
-            product (name, price, receipt_id) \
-            values " + pp_value)
+        # pp_value = ','.join(["('{}','{}','{}')".format(p[0], float(p[1]), receipt_id) for p in res['pp']])
+        # cursor.execute("insert into \
+        #     product (name, price, receipt_id) \
+        #     values " + pp_value)
 
-        mysql.get_db().commit()
+        # mysql.get_db().commit()
+        res['url_image'] = url_image
+        
         return {"message":"successful", "result": res}, 200
     except Exception as e:
         print(e)

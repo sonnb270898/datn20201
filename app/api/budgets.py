@@ -125,6 +125,7 @@ def delete_budget(id):
             where id = '{}'
         """.format(id))
 
+        mysql.get_db().commit()
         return {"message":"successful"}, 200
     except Exception as e:
         print(e)

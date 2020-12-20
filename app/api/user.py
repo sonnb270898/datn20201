@@ -30,7 +30,7 @@ class User(UserMixin):
                 "VALUES (%s, %s, %s, %s, %s)",
                 (id, email, displayName, name, photoURL),
             )
-            # mysql.get_db().commit()
+            mysql.get_db().commit()
         except Exception as e:
             print(e)
 
@@ -43,6 +43,6 @@ class User(UserMixin):
                 "set (%s, %s, %s, %s, %s)",
                 (id, email, displayName, name, photoURL),
             )
-            # mysql.get_db().commit()
+            mysql.get_db().commit()
         except Exception as e:
             print(e)        
