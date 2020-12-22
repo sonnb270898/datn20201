@@ -108,12 +108,12 @@ def create_receipt():
                 (purchaseDate, total, merchant, url_image, category_id, g.user_id))
         mysql.get_db().commit()
         r_id = cursor.lastrowid
-        
-        products_query = ",".join(["('{}','{}','{}')".format(x["name"], x["price"], r_id) for x in products])
-        cursor.execute("insert into \
-                product (name, price, receipt_id) \
-                values "+ products_query)
-        mysql.get_db().commit()
+        if products:        
+            products_query = ",".join(["('{}','{}','{}')".format(x["name"], x["price"], r_id) for x in products])
+            cursor.execute("insert into \
+                    product (name, price, receipt_id) \
+                    values "+ products_query)
+            mysql.get_db().commit()
 
         result = {
             "id": r_id,
@@ -134,37 +134,20 @@ def create_receipt_from_img():
     try:
         
         file = request.files['image']
-        
-        #conversion image
-        image = np.fromstring(file.read(), dtype="uint8")
-        image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-        
-        #extract data
-        res = extract_receipt(image)
-        
         filename = str(uuid.uuid4()) + secure_filename(file.filename)
-        file.save(os.path.join(UPLOAD_FOLDER, filename))
-        url_image = "https://localhost:5000/static/" + filename
+        image_path = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(image_path)
+        url_image = "http://localhost:5000/static/" + filename
 
-        # cursor = mysql.get_db().cursor()
-        # cursor.execute("insert into \
-        #         receipt (purchaseDate, total, merchant, url_image, category_id, user_id) \
-        #         values (%s,%s,%s,%s,%s,%s)",
-        #         (res['date'], float(res['total']), res['company'], url_image, category_id, g.user_id))
-        # #get receipt_id
-        # receipt_id = cursor.lastrowid
-        
-        # pp_value = ','.join(["('{}','{}','{}')".format(p[0], float(p[1]), receipt_id) for p in res['pp']])
-        # cursor.execute("insert into \
-        #     product (name, price, receipt_id) \
-        #     values " + pp_value)
+        image = cv2.imread(image_path)
 
-        # mysql.get_db().commit()
+        # extract data
+        res = extract_receipt(image)
         res['url_image'] = url_image
         
         return {"message":"successful", "result": res}, 200
     except Exception as e:
-        print(e)
+        return {"message":"fail", "result": []}, 200
     
 
 @receipts.route('/<id>', methods=['PUT'])
@@ -183,11 +166,11 @@ def update_receipt(id):
         cursor.execute("update receipt \
                         set purchaseDate=%s, total=%s, merchant=%s, category_id=%s, url_image=%s \
                         where id=%s", (purchaseDate, total, merchant, category_id, url_image, id))
-        
-        products_query = ",".join(["('{}','{}','{}')".format(x["name"],x["price"],id) for x in products])
-        cursor.execute("insert into \
-                product (name, price, receipt_id) \
-                values "+products_query)
+        if products:
+            products_query = ",".join(["('{}','{}','{}')".format(x["name"],x["price"],id) for x in products])
+            cursor.execute("insert into \
+                    product (name, price, receipt_id) \
+                    values "+products_query)
         mysql.get_db().commit()
 
         result = {

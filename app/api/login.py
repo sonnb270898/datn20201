@@ -12,6 +12,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
+import requests
 # from oauthlib.oauth2 import WebApplicationClient
 
 
@@ -84,6 +85,23 @@ def logout():
     # return redirect(url_for("/login"))
     return {"message":"logout successful"}
 
+@login_route.route('/create-default-categories', methods=['POST'])
+def create_default_categories():
+    default_categories = [("laptop","Máy tính"), ("tv","Tivi"), ("watch","Công nghệ"),
+    ("train","Phương tiện"),("print","Giấy tờ"), ("home","Thuê nhà"), ("picture","Du lịch")]
+    uid = request.json['uid']
+    try:
+        cursor = mysql.get_db().cursor()
+        values = ",".join(["('{}','{}','{}')".format(x[0], x[1], uid) for x in default_categories])
+        cursor.execute("insert into \
+                category (name, icon, user_id) \
+                values " + values)
+        mysql.get_db().commit()
+        return {"message":"successful", "result":"successful"}, 200
+    except Exception as e:
+        print(e)
+
+
 @login_route.route("/login/user", methods=['POST'])
 def check_user_login():
     uid = request.json["uid"]
@@ -95,5 +113,6 @@ def check_user_login():
 
     if not User.get_user(uid):
         User.create_user(id=uid, name=name, email=email, displayName=displayName, photoURL=photoURL)
+        s = requests.post(request.url_root+'create-default-categories', json={"uid":uid})
     login_user(user, remember=True)
     return redirect(url_for('receipts.get_all_receipts'))
