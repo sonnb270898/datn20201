@@ -11,7 +11,7 @@ from flask import url_for, redirect, g
 
 def check_islogin():
     if not current_user.is_authenticated:
-        return redirect(url_for('login.login'))
+        return {"message":"You are not login"}
     else: 
         g.user_id = current_user.get_id()
 

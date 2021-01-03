@@ -92,7 +92,7 @@ def create_default_categories():
     uid = request.json['uid']
     try:
         cursor = mysql.get_db().cursor()
-        values = ",".join(["('{}','{}','{}')".format(x[0], x[1], uid) for x in default_categories])
+        values = ",".join(["('{}','{}','{}')".format(x[1], x[0], uid) for x in default_categories])
         cursor.execute("insert into \
                 category (name, icon, user_id) \
                 values " + values)

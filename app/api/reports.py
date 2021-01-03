@@ -18,13 +18,13 @@ def report_by_week_of_month():
             for x in res:
                 convert_2_date = dateutil.parser.parse(x[1]).strftime('%d')
                 if int(convert_2_date) < 8:
-                    result[1]['among'] += float(x[2])
+                    result[0]['among'] += float(x[2])
                 elif int(convert_2_date) < 15:
-                    result[2]['among'] += float(x[2])
+                    result[1]['among'] += float(x[2])
                 elif int(convert_2_date) < 22:
-                    result[3]['among'] += float(x[2])
+                    result[2]['among'] += float(x[2])
                 else:
-                    result[4]['among'] += float(x[2])
+                    result[3]['among'] += float(x[2])
                 
             return {"message": "success", "result": result}
         return {"message": "success", "result": res}
