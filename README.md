@@ -35,6 +35,7 @@ pip install -r requirement.txt
 
 ***For Running***
 
+Model run in GPU
 More option can find in opt.py
 
 *For test image*

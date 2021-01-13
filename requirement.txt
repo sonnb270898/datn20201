@@ -1,2 +1,13 @@
-
+lanms==1.0.2
+lmdb==1.0.0
+natsort==7.0.1
+nltk==3.4.4
+opencv-contrib-python==4.2.0.34
+torch==1.5.0+cu101
+torchvision==0.6.0+cu101
+flask==1.1.2
+flask-login==0.4.1
+flask-mysql==1.5.1
+transformers==2.11.0
+torchtext==0.6.0
 

@@ -140,9 +140,10 @@ def create_receipt_from_img():
         url_image = "http://localhost:5000/static/" + filename
 
         image = cv2.imread(image_path)
-
+        print(image.shape)
         # extract data
         res = extract_receipt(image)
+        print(res)
         res['url_image'] = url_image
         
         return {"message":"successful", "result": res}, 200
